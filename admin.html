@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin - Keuangan Masjid Nurussalam</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  :root { --hijau:#0f5132; --hijau-muda:#e8f3ec; --emas:#b8860b; }
+  body { background:#f7faf8; color:#1d2b24; font-size:1.05rem; }
+  header { background:var(--hijau); color:#fff; padding:1.4rem 1rem; text-align:center; border-bottom:5px solid var(--emas); }
+  header h1 { font-size:1.5rem; margin:0; font-weight:700; }
+  header p { margin:.3rem 0 0; opacity:.9; }
+  .btn-hijau { background:var(--hijau); color:#fff; font-weight:600; padding:.6rem 1.2rem; }
+  .btn-hijau:hover { background:#0b3d26; color:#fff; }
+  .form-control, .form-select { padding:.65rem .75rem; font-size:1.05rem; }
+  th { background:var(--hijau-muda); white-space:nowrap; }
+  td, th { vertical-align:middle; }
+  .masuk { color:#198754; font-weight:600; } .keluar { color:#c0392b; font-weight:600; }
+  #formKotak.edit { border:2px solid var(--emas) !important; background:#fffbea !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Admin Keuangan Masjid Nurussalam</h1>
+  <p>Halaman khusus takmir</p>
+</header>
+
+<main class="container py-4" style="max-width:900px">
+  <div id="formKotak" class="bg-white border rounded p-3 mb-4">
+    <h2 class="h5 mb-3" id="judulForm">Tambah transaksi</h2>
+    <input type="hidden" id="id">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label" for="tanggal">Tanggal</label>
+        <input type="date" id="tanggal" class="form-control">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="tipe">Jenis transaksi</label>
+        <select id="tipe" class="form-select">
+          <option value="Masuk">Pemasukan</option>
+          <option value="Keluar">Pengeluaran</option>
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="kategori">Kategori</label>
+        <select id="kategori" class="form-select"></select>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="nominal">Nominal (Rp)</label>
+        <input type="number" id="nominal" class="form-control" min="1" inputmode="numeric" placeholder="Contoh: 150000">
+      </div>
+      <div class="col-12">
+        <label class="form-label" for="keterangan">Keterangan</label>
+        <input type="text" id="keterangan" class="form-control" placeholder="Contoh: Infaq Jumat">
+      </div>
+    </div>
+    <div id="notif" class="alert d-none mt-3 mb-0"></div>
+    <div class="mt-3 d-flex gap-2">
+      <button id="btnSimpan" class="btn btn-hijau" onclick="simpan()">Simpan</button>
+      <button id="btnBatal" class="btn btn-outline-secondary d-none" onclick="reset()">Batal edit</button>
+    </div>
+  </div>
+
+  <h2 class="h5 mb-3">Riwayat transaksi</h2>
+  <div class="table-responsive bg-white border rounded">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>Tanggal</th><th>Jenis</th><th>Kategori</th><th>Keterangan</th><th class="text-end">Nominal</th><th></th></tr></thead>
+      <tbody id="isi"><tr><td colspan="6" class="text-center text-muted">Memuat data...</td></tr></tbody>
+    </table>
+  </div>
+</main>
+
+<script>
+const API_URL = '[URL_GOOGLE_APPS_SCRIPT]';
+const KATEGORI = {
+  Masuk: ['Infaq', 'Donasi', 'Hibah'],
+  Keluar: ['Pembangunan Masjid', 'Kebutuhan Masjid']
+};
+const rp = n => 'Rp ' + Number(n).toLocaleString('id-ID');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $ = id => document.getElementById(id);
+let dataSemua = [];
+
+function isiKategori(pilih) {
+  $('kategori').innerHTML = KATEGORI[$('tipe').value].map(k => `<option>${k}</option>`).join('');
+  if (pilih) $('kategori').value = pilih;
+}
+$('tipe').addEventListener('change', () => isiKategori());
+
+function hariIni() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function notif(teks, jenis) {
+  const n = $('notif');
+  n.className = 'alert mt-3 mb-0 alert-' + jenis;
+  n.textContent = teks;
+}
+
+function reset() {
+  $('id').value = ''; $('nominal').value = ''; $('keterangan').value = '';
+  $('tanggal').value = hariIni(); $('tipe').value = 'Masuk'; isiKategori();
+  $('judulForm').textContent = 'Tambah transaksi';
+  $('btnSimpan').textContent = 'Simpan';
+  $('btnBatal').classList.add('d-none');
+  $('formKotak').classList.remove('edit');
+}
+
+async function muat() {
+  try {
+    const res = await fetch(API_URL);
+    const json = await res.json();
+    if (json.status !== 'ok') throw new Error(json.message);
+    dataSemua = json.data.sort((a,b) => b.tanggal.localeCompare(a.tanggal));
+    tampil();
+  } catch (e) {
+    $('isi').innerHTML = '<tr><td colspan="6" class="text-center text-danger">Data gagal dimuat. Periksa koneksi lalu muat ulang.</td></tr>';
+  }
+}
+
+function tampil() {
+  $('isi').innerHTML = dataSemua.length ? dataSemua.map(t => `
+    <tr>
+      <td class="text-nowrap">${esc(t.tanggal)}</td>
+      <td class="${t.tipe === 'Masuk' ? 'masuk' : 'keluar'}">${t.tipe === 'Masuk' ? 'Pemasukan' : 'Pengeluaran'}</td>
+      <td>${esc(t.kategori)}</td>
+      <td>${esc(t.keterangan)}</td>
+      <td class="text-end text-nowrap">${rp(t.nominal)}</td>
+      <td><button class="btn btn-sm btn-outline-success" onclick="edit('${esc(t.id)}')">Edit</button></td>
+    </tr>`).join('') : '<tr><td colspan="6" class="text-center text-muted">Belum ada transaksi.</td></tr>';
+}
+
+function edit(id) {
+  const t = dataSemua.find(x => x.id === id);
+  if (!t) return;
+  $('id').value = t.id;
+  $('tanggal').value = t.tanggal;
+  $('tipe').value = t.tipe; isiKategori(t.kategori);
+  $('nominal').value = t.nominal;
+  $('keterangan').value = t.keterangan;
+  $('judulForm').textContent = 'Ubah transaksi';
+  $('btnSimpan').textContent = 'Update';
+  $('btnBatal').classList.remove('d-none');
+  $('formKotak').classList.add('edit');
+  notif('', 'light'); $('notif').classList.add('d-none');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function simpan() {
+  const payload = {
+    id: $('id').value,
+    tanggal: $('tanggal').value,
+    tipe: $('tipe').value,
+    kategori: $('kategori').value,
+    keterangan: $('keterangan').value.trim(),
+    nominal: Number($('nominal').value)
+  };
+  if (!payload.tanggal || !(payload.nominal > 0)) {
+    return notif('Isi tanggal dan nominal terlebih dahulu.', 'warning');
+  }
+  const btn = $('btnSimpan'), label = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // menghindari preflight CORS
+      body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+    if (json.status !== 'ok') throw new Error(json.message);
+    const mode = json.mode;
+    reset();
+    notif(mode === 'update' ? 'Data berhasil diubah.' : 'Data berhasil disimpan.', 'success');
+    await muat();
+  } catch (e) {
+    notif('Gagal menyimpan: ' + e.message, 'danger');
+    btn.textContent = label;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+reset();
+muat();
+</script>
+</body>
+</html>
