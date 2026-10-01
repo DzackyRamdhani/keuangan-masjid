@@ -1,0 +1,9 @@
+   {
+     "rewrites": [
+       {
+         "source": "/",
+         "has": [{ "type": "host", "value": "admin-masjid-nurussalam.vercel.app" }],
+         "destination": "/admin.html"
+       }
+     ]
+   }
