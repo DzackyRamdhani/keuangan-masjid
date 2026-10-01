@@ -19,12 +19,19 @@
   .masuk { color:#198754; font-weight:600; } .keluar { color:#c0392b; font-weight:600; }
   th { background:var(--hijau-muda); white-space:nowrap; }
   td, th { vertical-align:middle; }
+  .buku { min-width:680px; }
+  .buku th.th-masuk { background:#d1e7dd; color:#0f5132; }
+  .buku th.th-keluar { background:#f8d7da; color:#842029; }
+  .buku td.c-masuk { color:#198754; font-weight:600; background:#f4fbf7; }
+  .buku td.c-keluar { color:#c0392b; font-weight:600; background:#fdf5f5; }
+  .buku td.c-saldo { font-weight:700; }
+  .kat { display:block; font-size:.85rem; color:#5b6b62; }
 </style>
 </head>
 <body>
 <header>
   <h1>Keuangan Masjid Nurussalam</h1>
-  <p>Laporan terbuka untuk seluruh jamaah</p>
+  <p>Per <span id="waktu"></span> WIB</p>
 </header>
 
 <main class="container py-4" style="max-width:900px">
@@ -36,11 +43,11 @@
     <div class="col-6 col-md-3"><div class="kotak utama"><small>Saldo akhir</small><strong id="akhir">-</strong></div></div>
   </div>
 
-  <h2 class="h5 mb-3">Transaksi terbaru</h2>
+  <h2 class="h5 mb-3">Buku kas (transaksi terbaru di atas)</h2>
   <div id="pesan" class="alert alert-secondary">Memuat data...</div>
   <div class="table-responsive bg-white border rounded">
-    <table class="table table-hover mb-0">
-      <thead><tr><th>Tanggal</th><th>Jenis</th><th>Kategori</th><th>Keterangan</th><th class="text-end">Nominal</th></tr></thead>
+    <table class="table table-hover mb-0 buku">
+      <thead><tr><th>Tanggal</th><th>Keterangan</th><th class="text-end th-masuk">Pemasukan</th><th class="text-end th-keluar">Pengeluaran</th><th class="text-end">Saldo</th></tr></thead>
       <tbody id="isi"></tbody>
     </table>
   </div>
@@ -55,13 +62,28 @@ const $ = id => document.getElementById(id);
 
 function tglIndo(t) { const [y,m,d] = t.split('-'); return d + ' ' + BULAN[m-1].slice(0,3) + ' ' + y; }
 
+// Tanggal dan jam WIB (Asia/Jakarta), diperbarui tiap detik
+function wib() {
+  const p = {};
+  new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit' })
+    .formatToParts(new Date()).forEach(x => p[x.type] = x.value);
+  return { y: p.year, m: p.month };
+}
+function jam() {
+  const n = new Date();
+  const tg = n.toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const jm = n.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
+  $('waktu').textContent = tg + ', pukul ' + jm;
+}
+setInterval(jam, 1000); jam();
+
 async function muat() {
   try {
     const res = await fetch(API_URL);
     const json = await res.json();
     if (json.status !== 'ok') throw new Error(json.message);
     tampil(json.data);
-    $('pesan').remove();
+    if ($('pesan')) $('pesan').remove();
   } catch (e) {
     $('pesan').className = 'alert alert-danger';
     $('pesan').textContent = 'Data gagal dimuat. Periksa koneksi internet lalu muat ulang halaman.';
@@ -69,9 +91,9 @@ async function muat() {
 }
 
 function tampil(data) {
-  const now = new Date();
-  const ym = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
-  $('bulan').textContent = BULAN[now.getMonth()] + ' ' + now.getFullYear();
+  const w = wib();
+  const ym = w.y + '-' + w.m;
+  $('bulan').textContent = BULAN[+w.m - 1] + ' ' + w.y;
 
   let awal = 0, masuk = 0, keluar = 0;
   data.forEach(t => {
@@ -84,17 +106,21 @@ function tampil(data) {
   $('keluar').textContent = rp(keluar);
   $('akhir').textContent = rp(awal + masuk - keluar);
 
-  const terbaru = data.slice().sort((a,b) => b.tanggal.localeCompare(a.tanggal)).slice(0, 30);
+  const urut = data.map((t, i) => ({ ...t, i })).sort((a, b) => a.tanggal.localeCompare(b.tanggal) || a.i - b.i);
+  let saldo = 0;
+  urut.forEach(t => { saldo += t.tipe === 'Masuk' ? t.nominal : -t.nominal; t.saldo = saldo; });
+  const terbaru = urut.reverse().slice(0, 50);
   $('isi').innerHTML = terbaru.length ? terbaru.map(t => `
     <tr>
       <td class="text-nowrap">${tglIndo(t.tanggal)}</td>
-      <td class="${t.tipe === 'Masuk' ? 'masuk' : 'keluar'}">${t.tipe === 'Masuk' ? 'Pemasukan' : 'Pengeluaran'}</td>
-      <td>${esc(t.kategori)}</td>
-      <td>${esc(t.keterangan)}</td>
-      <td class="text-end text-nowrap ${t.tipe === 'Masuk' ? 'masuk' : 'keluar'}">${rp(t.nominal)}</td>
+      <td>${esc(t.keterangan || '-')}<span class="kat">${esc(t.kategori)}</span></td>
+      <td class="text-end text-nowrap c-masuk">${t.tipe === 'Masuk' ? rp(t.nominal) : '-'}</td>
+      <td class="text-end text-nowrap c-keluar">${t.tipe === 'Keluar' ? rp(t.nominal) : '-'}</td>
+      <td class="text-end text-nowrap c-saldo">${rp(t.saldo)}</td>
     </tr>`).join('') : '<tr><td colspan="5" class="text-center text-muted">Belum ada transaksi.</td></tr>';
 }
 muat();
+setInterval(muat, 60000); // data diperbarui otomatis tiap 1 menit
 </script>
 </body>
 </html>
