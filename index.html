@@ -5,31 +5,48 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="logo.png">
 <title>Keuangan Masjid Nurussalam</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <style>
-  :root { --hijau:#0f5132; --hijau-muda:#e8f3ec; --emas:#b8860b; }
-  body { background:#f7faf8; color:#1d2b24; font-size:1.05rem; }
-  header { background:var(--hijau); color:#fff; padding:1.6rem 1rem; text-align:center; border-bottom:5px solid var(--emas); }
-  header h1 { font-size:1.6rem; margin:0; font-weight:700; }
-  header p { margin:.3rem 0 0; opacity:.9; }
-  .kotak { background:#fff; border:1px solid #cfe3d6; border-radius:12px; padding:1rem; height:100%; }
-  .kotak small { color:#5b6b62; display:block; }
-  .kotak strong { font-size:1.3rem; }
-  .kotak.utama { background:var(--hijau); color:#fff; border-color:var(--hijau); }
-  .kotak.utama small { color:#d6eadf; }
-  .masuk { color:#198754; font-weight:600; } .keluar { color:#c0392b; font-weight:600; }
-  th { background:var(--hijau-muda); white-space:nowrap; }
-  td, th { vertical-align:middle; }
+  :root { --hijau:#0b5d3b; --segar:#2e9e5b; --mint:#e6f6ec; --garis:#cfe8d8; --emas:#f2b705; --teks:#17301f; }
+  body { background:#f1faf4; color:var(--teks); font-family:'Nunito',system-ui,sans-serif; font-size:1.05rem; }
+  h1,h2,.h5,.btn-hijau { font-family:'Baloo 2','Nunito',sans-serif; }
+  header { background:linear-gradient(135deg,#0b5d3b 0%,#1b8a50 100%); color:#fff; padding:1.5rem 1rem 1.8rem; border-bottom:6px solid var(--emas); border-radius:0 0 28px 28px; box-shadow:0 8px 20px rgba(11,93,59,.25);
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='56' height='56'><path d='M28 4l5 11 11-5-5 11 11 5-11 5 5 11-11-5-5 11-5-11-11 5 5-11-11-5 11-5-5-11 11 5z' fill='none' stroke='white' stroke-opacity='.13' stroke-width='1.3'/></svg>"), linear-gradient(135deg,#0b5d3b 0%,#1b8a50 100%); }
+  header h1 { font-size:1.7rem; margin:0; font-weight:700; line-height:1.15; }
+  header p { margin:.25rem 0 0; color:#fff3c2; font-weight:600; }
+  .kepala { display:flex; align-items:center; gap:1rem; max-width:900px; margin:0 auto; text-align:left; }
+  .kepala img { width:70px; height:70px; object-fit:contain; background:#fff; border-radius:50%; padding:5px; flex-shrink:0; border:3px solid var(--emas); box-shadow:0 4px 10px rgba(0,0,0,.2); }
+  @media (max-width:480px) { .kepala img { width:56px; height:56px; } header h1 { font-size:1.25rem; } }
+  main h2 { font-weight:700; color:var(--hijau); padding-left:.7rem; border-left:6px solid var(--emas); font-size:1.3rem; }
+  .salam { background:#fff; border:2px dashed var(--segar); border-radius:16px; padding:.8rem 1rem; color:var(--hijau); font-weight:600; }
+  .kotak { border-radius:18px; padding:1rem; height:100%; border:2px solid var(--garis); background:#fff; box-shadow:0 4px 12px rgba(11,93,59,.08); }
+  .kotak small { display:block; font-weight:700; color:#4b6455; }
+  .kotak strong { font-family:'Baloo 2',sans-serif; font-size:1.35rem; line-height:1.3; }
+  .row > div:nth-child(1) .kotak { background:#eaf7ee; }
+  .row > div:nth-child(2) .kotak { background:#dcf5e4; border-color:#a9dfbd; }
+  .row > div:nth-child(3) .kotak { background:#fff0ee; border-color:#f5c6c0; }
+  .kotak.utama { background:linear-gradient(135deg,#0b5d3b,#1b8a50); border-color:var(--emas); border-width:3px; color:#fff; }
+  .kotak.utama small { color:#fff3c2; }
+  .masuk { color:#16854a; font-weight:700; } .keluar { color:#d6453d; font-weight:700; }
+  .table-responsive { border-radius:18px; border:2px solid var(--garis) !important; background:#fff !important; box-shadow:0 4px 12px rgba(11,93,59,.08); }
+  th, td { vertical-align:middle; }
+  th { background:var(--hijau) !important; color:#fff !important; white-space:nowrap; font-weight:700; }
   .buku { min-width:680px; }
-  .buku th.th-masuk { background:#d1e7dd; color:#0f5132; }
-  .buku th.th-keluar { background:#f8d7da; color:#842029; }
-  .buku td.c-masuk { color:#198754; font-weight:600; background:#f4fbf7; }
-  .buku td.c-keluar { color:#c0392b; font-weight:600; background:#fdf5f5; }
-  .buku td.c-saldo { font-weight:700; }
-  .kat { display:block; font-size:.85rem; color:#5b6b62; }
-  .kepala { display:flex; align-items:center; gap:.9rem; max-width:900px; margin:0 auto; text-align:left; }
-  .kepala img { width:64px; height:64px; object-fit:contain; background:#fff; border-radius:50%; padding:4px; flex-shrink:0; }
-  @media (max-width:480px) { .kepala img { width:52px; height:52px; } header h1 { font-size:1.2rem !important; } }
+  .buku th.th-masuk { background:#2e9e5b !important; } .buku th.th-keluar { background:#d6453d !important; }
+  .buku td.c-masuk { color:#16854a; font-weight:700; background:#effaf2; }
+  .buku td.c-keluar { color:#d6453d; font-weight:700; background:#fff4f2; }
+  .buku td.c-saldo { font-weight:800; color:var(--hijau); }
+  .kat { display:inline-block; font-size:.8rem; font-weight:700; color:var(--hijau); background:var(--mint); border-radius:20px; padding:0 .55rem; margin-top:.15rem; }
+  .form-label { font-weight:700; color:var(--hijau); }
+  .form-control, .form-select { border:2px solid var(--garis); border-radius:12px; padding:.65rem .8rem; font-size:1.05rem; }
+  .form-control:focus, .form-select:focus { border-color:var(--segar); box-shadow:0 0 0 .25rem rgba(46,158,91,.2); }
+  .btn-hijau { background:linear-gradient(135deg,#1b8a50,#0b5d3b); color:#fff; font-weight:700; font-size:1.1rem; padding:.55rem 1.6rem; border-radius:50px; border:0; box-shadow:0 4px 10px rgba(11,93,59,.3); }
+  .btn-hijau:hover { background:#0b5d3b; color:#fff; }
+  .btn-sm { border-radius:50px; font-weight:700; }
+  #formKotak { border-radius:20px !important; border:2px solid var(--garis) !important; box-shadow:0 6px 16px rgba(11,93,59,.1); }
+  #formKotak.edit { border:3px solid var(--emas) !important; background:#fffbe6 !important; }
 </style>
 </head>
 <body>
@@ -44,15 +61,16 @@
 </header>
 
 <main class="container py-4" style="max-width:900px">
+  <p class="salam">Assalamu'alaikum, jamaah yang dirahmati Allah. Inilah laporan keuangan masjid kita, terbuka untuk semua.</p>
   <h2 class="h5 mb-3">Ringkasan <span id="bulan"></span></h2>
   <div class="row g-3 mb-4">
-    <div class="col-6 col-md-3"><div class="kotak"><small>Saldo awal bulan</small><strong id="awal">-</strong></div></div>
-    <div class="col-6 col-md-3"><div class="kotak"><small>Pemasukan</small><strong id="masuk" class="masuk">-</strong></div></div>
-    <div class="col-6 col-md-3"><div class="kotak"><small>Pengeluaran</small><strong id="keluar" class="keluar">-</strong></div></div>
-    <div class="col-6 col-md-3"><div class="kotak utama"><small>Saldo akhir</small><strong id="akhir">-</strong></div></div>
+    <div class="col-6 col-md-3"><div class="kotak"><small>🌙 Saldo awal bulan</small><strong id="awal">-</strong></div></div>
+    <div class="col-6 col-md-3"><div class="kotak"><small>💚 Pemasukan</small><strong id="masuk" class="masuk">-</strong></div></div>
+    <div class="col-6 col-md-3"><div class="kotak"><small>🧾 Pengeluaran</small><strong id="keluar" class="keluar">-</strong></div></div>
+    <div class="col-6 col-md-3"><div class="kotak utama"><small>🕌 Saldo akhir</small><strong id="akhir">-</strong></div></div>
   </div>
 
-  <h2 class="h5 mb-3">Buku kas (transaksi terbaru di atas)</h2>
+  <h2 class="h5 mb-3">📖 Buku kas (terbaru di atas)</h2>
   <div id="pesan" class="alert alert-secondary">Memuat data...</div>
   <div class="table-responsive bg-white border rounded">
     <table class="table table-hover mb-0 buku">
