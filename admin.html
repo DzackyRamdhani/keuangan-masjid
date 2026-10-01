@@ -154,7 +154,8 @@ function tampil() {
       <td class="text-end text-nowrap c-masuk">${t.tipe === 'Masuk' ? rp(t.nominal) : '-'}</td>
       <td class="text-end text-nowrap c-keluar">${t.tipe === 'Keluar' ? rp(t.nominal) : '-'}</td>
       <td class="text-end text-nowrap c-saldo">${rp(t.saldo)}</td>
-      <td><button class="btn btn-sm btn-outline-success" onclick="edit('${esc(t.id)}')">Edit</button></td>
+      <td class="text-nowrap"><button class="btn btn-sm btn-outline-success" onclick="edit('${esc(t.id)}')">Edit</button>
+        <button class="btn btn-sm btn-outline-danger ms-1" onclick="hapus('${esc(t.id)}')">Hapus</button></td>
     </tr>`).join('') : '<tr><td colspan="6" class="text-center text-muted">Belum ada transaksi.</td></tr>';
 }
 
@@ -172,6 +173,26 @@ function edit(id) {
   $('formKotak').classList.add('edit');
   notif('', 'light'); $('notif').classList.add('d-none');
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function hapus(id) {
+  const t = dataSemua.find(x => x.id === id);
+  if (!t) return;
+  if (!confirm('Hapus transaksi ini?\n\n' + t.tanggal + ' - ' + (t.keterangan || t.kategori) + ' - ' + rp(t.nominal) + '\n\nData yang dihapus tidak bisa dikembalikan.')) return;
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'hapus', id: id })
+    });
+    const json = await res.json();
+    if (json.status !== 'ok') throw new Error(json.message);
+    if ($('id').value === id) reset();
+    notif('Data berhasil dihapus.', 'success');
+    await muat();
+  } catch (e) {
+    notif('Gagal menghapus: ' + e.message, 'danger');
+  }
 }
 
 async function simpan() {
