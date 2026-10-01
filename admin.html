@@ -17,6 +17,13 @@
   .form-control, .form-select { padding:.65rem .75rem; font-size:1.05rem; }
   th { background:var(--hijau-muda); white-space:nowrap; }
   td, th { vertical-align:middle; }
+  .buku { min-width:680px; }
+  .buku th.th-masuk { background:#d1e7dd; color:#0f5132; }
+  .buku th.th-keluar { background:#f8d7da; color:#842029; }
+  .buku td.c-masuk { color:#198754; font-weight:600; background:#f4fbf7; }
+  .buku td.c-keluar { color:#c0392b; font-weight:600; background:#fdf5f5; }
+  .buku td.c-saldo { font-weight:700; }
+  .kat { display:block; font-size:.85rem; color:#5b6b62; }
   .masuk { color:#198754; font-weight:600; } .keluar { color:#c0392b; font-weight:600; }
   #formKotak.edit { border:2px solid var(--emas) !important; background:#fffbea !important; }
 </style>
@@ -65,8 +72,8 @@
 
   <h2 class="h5 mb-3">Riwayat transaksi</h2>
   <div class="table-responsive bg-white border rounded">
-    <table class="table table-hover mb-0">
-      <thead><tr><th>Tanggal</th><th>Jenis</th><th>Kategori</th><th>Keterangan</th><th class="text-end">Nominal</th><th></th></tr></thead>
+    <table class="table table-hover mb-0 buku">
+      <thead><tr><th>Tanggal</th><th>Keterangan</th><th class="text-end th-masuk">Pemasukan</th><th class="text-end th-keluar">Pengeluaran</th><th class="text-end">Saldo</th><th></th></tr></thead>
       <tbody id="isi"><tr><td colspan="6" class="text-center text-muted">Memuat data...</td></tr></tbody>
     </table>
   </div>
@@ -79,6 +86,10 @@ const KATEGORI = {
   Keluar: ['Pembangunan Masjid', 'Kebutuhan Masjid']
 };
 const rp = n => 'Rp ' + Number(n).toLocaleString('id-ID');
+function tglIndo(t) {
+  const B = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const [y, m, d] = t.split('-'); return d + ' ' + B[m-1] + ' ' + y;
+}
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const $ = id => document.getElementById(id);
 let dataSemua = [];
@@ -122,13 +133,18 @@ async function muat() {
 }
 
 function tampil() {
-  $('isi').innerHTML = dataSemua.length ? dataSemua.map(t => `
+  const data = dataSemua;
+  const urut = data.map((t, i) => ({ ...t, i })).sort((a, b) => a.tanggal.localeCompare(b.tanggal) || a.i - b.i);
+  let saldo = 0;
+  urut.forEach(t => { saldo += t.tipe === 'Masuk' ? t.nominal : -t.nominal; t.saldo = saldo; });
+  const terbaru = urut.reverse().slice(0, 50);
+  $('isi').innerHTML = terbaru.length ? terbaru.map(t => `
     <tr>
-      <td class="text-nowrap">${esc(t.tanggal)}</td>
-      <td class="${t.tipe === 'Masuk' ? 'masuk' : 'keluar'}">${t.tipe === 'Masuk' ? 'Pemasukan' : 'Pengeluaran'}</td>
-      <td>${esc(t.kategori)}</td>
-      <td>${esc(t.keterangan)}</td>
-      <td class="text-end text-nowrap">${rp(t.nominal)}</td>
+      <td class="text-nowrap">${tglIndo(t.tanggal)}</td>
+      <td>${esc(t.keterangan || '-')}<span class="kat">${esc(t.kategori)}</span></td>
+      <td class="text-end text-nowrap c-masuk">${t.tipe === 'Masuk' ? rp(t.nominal) : '-'}</td>
+      <td class="text-end text-nowrap c-keluar">${t.tipe === 'Keluar' ? rp(t.nominal) : '-'}</td>
+      <td class="text-end text-nowrap c-saldo">${rp(t.saldo)}</td>
       <td><button class="btn btn-sm btn-outline-success" onclick="edit('${esc(t.id)}')">Edit</button></td>
     </tr>`).join('') : '<tr><td colspan="6" class="text-center text-muted">Belum ada transaksi.</td></tr>';
 }
