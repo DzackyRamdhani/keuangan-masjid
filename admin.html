@@ -48,6 +48,11 @@
   .btn-sm { border-radius:50px; font-weight:700; }
   #formKotak { border-radius:20px !important; border:2px solid var(--garis) !important; box-shadow:0 6px 16px rgba(11,93,59,.1); }
   #formKotak.edit { border:3px solid var(--emas) !important; background:#fffbe6 !important; }
+  .program { margin-left:auto; text-align:right; flex-shrink:0; }
+  .program small { display:block; font-size:.75rem; font-weight:600; color:#d6efe0; }
+  .program b { display:block; font-family:'Baloo 2',sans-serif; font-size:1.05rem; line-height:1.2; }
+  .program span { display:block; font-size:.72rem; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:#f2b705; }
+  @media (max-width:600px) { .kepala { flex-wrap:wrap; } .program { order:-1; width:100%; margin-bottom:.2rem; } .program b { font-size:.95rem; } }
 </style>
 </head>
 <body>
@@ -58,6 +63,7 @@
       <h1>Admin Keuangan Masjid Nurussalam</h1>
       <p>Halaman khusus takmir</p>
     </div>
+    <div class="program"><small>Dibuat Oleh :</small><b>PLK Logandeng 2026</b><span>UNY Mengabdi 2026/1</span></div>
   </div>
 </header>
 
